@@ -13,22 +13,17 @@ Version : 1 (Initial Version)
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 # Import Libraries for reading PDFs
-import PyPDF2 
 import os, sys
 
 # Import NLTK Text Processing Libraries
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
+from pypdf import PdfReader
 
-
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.feature_extraction.text import CountVectorizer
-
-directory = 'C:\\Users\\l1jxp04\\AI Notebooks\\NLP\\NLP_Demo\\GreenSheets-2012\\GreenSheets-2012'
+directory = '/Users/kunalap/Downloads/files'
 
 # For loop to read all PDF files available in directory 
 allwords = []
@@ -43,16 +38,16 @@ for file in os.listdir(directory):
        
     #open file
     pdfFileObj = open(pdf_filename,'rb')
-    pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
-    num_pages = pdfReader.numPages
+    pdfReader = PdfReader(pdfFileObj)
+    num_pages = len(pdfReader.pages)
         
     #Read content of PDF as Text
     count = 0
     text = ""
     while count < num_pages:
-        pageObj = pdfReader.getPage(count)
+        pageObj = pdfReader.pages[count]
         count +=1
-        text += pageObj.extractText()
+        text += pageObj.extract_text()
     if text != "":
        text = text
     alltext = alltext + text
@@ -67,6 +62,12 @@ for file in os.listdir(directory):
     #Remove Stopwords and Punctuations
     punctuation = ['(',')',';',':','[',']',',']
     stop_words = stopwords.words('english')
+    stop_words.append('u')
+    stop_words.append('wa')
+    stop_words.append('page')
+
+
+
     
     keywords = [word for word in tokens if not word in stop_words and  not word in punctuation and word.isalpha()]
     #print(keywords)
@@ -109,7 +110,7 @@ feature_matrix = tfidf.fit_transform(text_data)
 feature_matrix.toarray()
 
 # Show tf-idf feature matrix
-tfidf.get_feature_names()
+tfidf.get_feature_names_out()
 
 # Create data frame
 #pd.DataFrame(feature_matrix.toarray(), columns=tfidf.get_feature_names())
@@ -119,7 +120,7 @@ tfidf.get_feature_names()
 
 # This is the plot of a word vs the offset of the word in the text corpus.The y-axis represents the word. Each word has a strip representing entire text in terms of offset, and a mark on the strip indicates the occurrence of the word at that offset, a strip is an x-axis. The positional information can indicate the focus of discussion in the text. 
 
-topics = ['projection', 'federal', 'percent','tealbook','economic']
+topics = ['evil', 'sin', 'collective']
 
 from nltk.draw.dispersion import dispersion_plot
 dispersion_plot(allwords, topics)
