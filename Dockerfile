@@ -10,7 +10,7 @@ RUN git clone https://github.com/KPranith/NLP-PDF-Text-Analytics.git
 # Set the working directory to /app
 WORKDIR /NLP-PDF-Text-Analytics
 
-RUN pip3 install -r /NLP-PDF-Text-Analytics/requirements.txt
+# RUN pip3 install -r /NLP-PDF-Text-Analytics/requirements.txt
 
 # Define environment variable
 # ENV NAME World
