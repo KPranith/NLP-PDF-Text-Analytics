@@ -1,6 +1,6 @@
 # NLP Search and Text Analytics / Visualization 
 
-NLP Project using python NLTK NLP library 
+NLP Project using python [NLTK](https://www.nltk.org/book/ch01.html) library 
 
 NLP SEARCH :
 
@@ -16,7 +16,5 @@ Create Visualizations on Text extracted from PDFs
 - Generate Word Cloud
 - Lexical Dispersion Plot
 - Frequency Distribution Plot - Single words, BI-grams, Tri-grams
-- Word Length Distribution Plot
-- t-SNE Corpus Visualization
 
 Also attached Word documentation.
