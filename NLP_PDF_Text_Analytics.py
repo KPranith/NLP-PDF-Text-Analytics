@@ -13,6 +13,12 @@ Version : 1 (Initial Version)
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import nltk
+import string
+nltk.download('punkt')
+nltk.download('punkt_tab')
+nltk.download('wordnet')
+nltk.download('stopwords')
 
 # Import Libraries for reading PDFs
 import os, sys
@@ -23,13 +29,28 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from pypdf import PdfReader
 
-directory = '/Users/kunalap/Downloads/files'
+directory = './files'
 
 # For loop to read all PDF files available in directory 
 allwords = []
 allcount = 0
 alltext = ""
+pdf_filename = ""
 i = 0
+custom_stopwords = []
+# Read and load stopwords from a file to add to the above list
+stopwords_file = './files/stopwords.txt'  # Path to the stopwords file
+if os.path.exists(stopwords_file):
+    with open(stopwords_file, 'r') as f:
+        custom_stopwords = f.read().splitlines()
+        print(custom_stopwords) 
+
+def custom_text_handler(text):
+    # print("Text before filtering: ", text)
+    text = text.translate(str.maketrans('', '', string.punctuation+"\“"+"\”"))  # Remove punctuation   
+    filtered_words = [word.lower() for word in text.split() if word.lower() not in custom_stopwords]        
+    return ' '.join(filtered_words)
+
 for file in os.listdir(directory):
     i += 1
     if not file.endswith(".pdf"):
@@ -47,9 +68,11 @@ for file in os.listdir(directory):
     while count < num_pages:
         pageObj = pdfReader.pages[count]
         count +=1
-        text += pageObj.extract_text()
+        page_text = pageObj.extract_text()
+        page_text = custom_text_handler(page_text)
+        text += page_text
     if text != "":
-       text = text
+        text = text
     alltext = alltext + text
     # Extracting word Tokens from Text
     allcount = allcount + count
@@ -61,11 +84,8 @@ for file in os.listdir(directory):
     
     #Remove Stopwords and Punctuations
     punctuation = ['(',')',';',':','[',']',',']
-    stop_words = stopwords.words('english')
-    stop_words.append('u')
-    stop_words.append('wa')
-    stop_words.append('page')
-
+    stop_words = stopwords.words('english')    
+    stop_words.extend(custom_stopwords)
 
 
     
@@ -86,13 +106,18 @@ wordstr = ' '.join(str(e) for e in allwords)
 from wordcloud import WordCloud, STOPWORDS 
 
 wordcloud = WordCloud(max_font_size=60).generate(alltext)
+file_name_preix = os.path.splitext(os.path.basename(pdf_filename))[0]
 
-plt.figure(figsize=(16,12))
+plt.figure(figsize=(20,15))
 # plot wordcloud in matplotlib
 plt.imshow(wordcloud, interpolation="bilinear")
 plt.axis("off")
-plt.title("Word Cloud on Keywords from All PDFs")
-plt.show()
+plt.title("Word Cloud on Keywords from - "+file_name_preix)
+# Save the word cloud plot to a local directory
+output_path = './files/results/'+file_name_preix+'_wordcloud_output.png'
+
+plt.savefig(output_path)
+print(f"Word cloud saved to {output_path}")
 
 ## Term Frequency - Inverse Term Frequency
 
@@ -120,10 +145,22 @@ tfidf.get_feature_names_out()
 
 # This is the plot of a word vs the offset of the word in the text corpus.The y-axis represents the word. Each word has a strip representing entire text in terms of offset, and a mark on the strip indicates the occurrence of the word at that offset, a strip is an x-axis. The positional information can indicate the focus of discussion in the text. 
 
-topics = ['evil', 'sin', 'collective']
+topics_file = './files/topics.txt'  # Path to the topics file
+if os.path.exists(topics_file):
+    with open(topics_file, 'r') as f:
+        topics = [topic.strip() for topic in f.read().splitlines()]
+else:
+    topics = []  # Default to an empty list if the file doesn't exist
 
 from nltk.draw.dispersion import dispersion_plot
+plt.figure(figsize=(16, 5))
+# bigrams_and_trigrams = [' '.join(bigram) for bigram in nltk.bigrams(allwords)] + [' '.join(trigram) for trigram in nltk.trigrams(allwords)]
+# bigrams_and_trigrams += allwords
 dispersion_plot(allwords, topics)
+plt.subplots_adjust(bottom=0.2,left=0.2)  # Increase bottom margin to prevent label cutoff
+output_path = './files/results/'+file_name_preix+'_lexical_dispersion_plot.png'
+plt.savefig(output_path)
+print(f"Lexical dispersion plot saved to {output_path}")
 
 
 # ## 3. Frequency distribution plot
@@ -146,11 +183,11 @@ x, y = zip(*freqdist.most_common(n=20))
 plt.figure(figsize=(16,5))
 plt.bar(range(len(x)), y, color = 'Orange', tick_label = y)
 plt.xticks(range(len(x)), x)
-plt.title('Frequency Count of Top 20 Words')
+plt.title('Frequency Count of Top 20 Words -'+file_name_preix)
 plt.xlabel('Frequent Words')
 plt.ylabel('Count')
-plt.show()
-plt.savefig('Most Frequent 10 words.jpeg')
+output_path = './files/results/'+file_name_preix+'_freq10.jpeg'
+plt.savefig(output_path)
 
 # Least common 5 words
 
@@ -172,11 +209,12 @@ plt.barh(range(len(x)), y, color = 'Maroon')
 #plt.xticks(range(len(x)), x)
 y_pos = np.arange(len(x))
 plt.yticks(y_pos, x)
-plt.title('Frequency Count of Top 20 Bi-Grams')
+plt.title('Frequency Count of Top 20 Bi-Grams -'+file_name_preix)
 plt.ylabel('Frequent Words')
 plt.xlabel('Count')
-plt.show()
-plt.savefig('Most Frequent 20 Bi-Grams.jpeg')
+plt.subplots_adjust(bottom=0.2,left=0.2)  
+output_path = './files/results/'+file_name_preix+'_freq20_BiGrams.jpeg'
+plt.savefig(output_path)
 
 # Get Trigrams from text
 trigrams = nltk.trigrams(allwords)
@@ -194,11 +232,12 @@ plt.barh(range(len(x)), y, color = 'Darkblue')
 #plt.xticks(range(len(x)), x)
 y_pos = np.arange(len(x))
 plt.yticks(y_pos, x)
-plt.title('Frequency Count of Top 20 Tri-Grams')
+plt.title('Frequency Count of Top 20 Tri-Grams -'+file_name_preix)
 plt.ylabel('Frequent Words')
 plt.xlabel('Count')
-plt.show()
-plt.savefig('Most Frequent 20 Tri-Grams.jpeg')
+plt.subplots_adjust(bottom=0.2,left=0.2) 
+output_path = './files/results/'+file_name_preix+'_freq20_TriGrams.jpeg'
+plt.savefig(output_path)
 
 # ## 4. Word Length Distribution Plot
 
@@ -214,7 +253,7 @@ cfdist.plot()
 
 #  Visualizing document similarity is to use t-distributed stochastic neighbor embedding
 
-from yellowbrick.text import TSNEVisualizer
+""" from yellowbrick.text import TSNEVisualizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 tfidf  = TfidfVectorizer()
@@ -233,3 +272,4 @@ token = RegexpTokenizer(r'[a-zA-Z0-9]+')
 cv = CountVectorizer(lowercase=True,stop_words='english',ngram_range = (1,1),tokenizer = token.tokenize)
 
 text_counts= cv.fit_transform(df[0])
+ """

@@ -1,0 +1,15 @@
+#!/bin/bash
+#extract the history to json
+sqlite3 ./state.vscdb "SELECT value FROM ItemTable WHERE key = 'interactive.sessions';" > interactive.sessions.json
+# Read the JSON file and split each object into a separate file
+jq -c '.[]' interactive.sessions.json | while read -r element; do
+    # Extract the customTitle and sanitize it for use as a filename
+    customTitle=$(echo $element | jq -r '.customTitle' | tr -cd '[:alnum:][:space:]._-' | tr ' ' '_')
+    # Ensure the filename is not empty
+    if [ -z "$customTitle" ]; then
+        customTitle="untitled"
+    fi
+    
+    # Write the element to a file named after the sanitized customTitle
+    echo "$element" | jq '.' > "${customTitle}.json"
+done
